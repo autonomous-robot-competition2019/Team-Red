@@ -32,8 +32,12 @@ void loop() {
       pwm.setPWM(1,0,333);
   // Main code
   } else {
-    goStraight(1000);
-    fullRotation();
+    pwm.setPWM(0,0,100);
+    pwm.setPWM(1,0,433);
+    delay(1000);
+    pwm.setPWM(0,0,433);
+    pwm.setPWM(1,0,433);
+    delay(3000);
   }
 
 }
