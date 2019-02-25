@@ -11,7 +11,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // Neutral PWM is 333
 
 // Define runtime in seconds
-#define RUNTIME 60
+#define RUNTIME 10
 
 int hasRun;
 
@@ -35,30 +35,23 @@ void loop() {
     pwm.setPWM(0,0,100);
     pwm.setPWM(1,0,433);
     delay(1000);
-    pwm.setPWM(0,0,433);
-    pwm.setPWM(1,0,433);
+    fullRotation();
     delay(3000);
   }
 
 }
 
 void fullRotation() {
-  long startTime = millis();
-  long endTime = startTime;
-  while ((endTime - startTime) <= 3000) {
     pwm.setPWM(0,0,433);
     pwm.setPWM(1,0,433);
-    endTime = millis();
-  }
-  pwm.setPWM(0,0,333);
-  pwm.setPWM(1,0,333); 
+    delay(3000);
 }
 
-void goStraight(int length) {
-  long startTime = millis();
-  long endTime = startTime;
-  while ((endTime - startTime) <= length) {
-      pwm.setPWM(0,0,100);
-      pwm.setPWM(1,0,433);
-  }
-}
+//void goStraight(int length) {
+//  long startTime = millis();
+//  long endTime = startTime;
+//  while ((endTime - startTime) <= length) {
+//      pwm.setPWM(0,0,100);
+//      pwm.setPWM(1,0,433);
+//  }
+//}
