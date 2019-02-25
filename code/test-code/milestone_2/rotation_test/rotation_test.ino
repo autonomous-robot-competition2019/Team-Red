@@ -12,6 +12,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 // Define runtime in seconds
 #define RUNTIME 10
+#define sensor A0
 
 int hasRun;
 
@@ -26,17 +27,24 @@ void setup() {
 }
 
 void loop() {
+   float volts = analogRead(sensor)*0.0048828125;  // value from sensor * (5/1024)
+  int distance = 13*pow(volts, -1); // worked out from datasheet graph
   // Stop code
-  if (millis() >= RUNTIME * 1000) {
+  if (millis() >= RUNTIME * 1000) if (distance <= 30) {
       pwm.setPWM(0,0,333);
       pwm.setPWM(1,0,333);
-  // Main code
-  } else {
+  } 
+
+  else {
+      if (distance <= 30) {
+      pwm.setPWM(0,0,333);
+      pwm.setPWM(1,0,333);
+  } 
     pwm.setPWM(0,0,100);
     pwm.setPWM(1,0,433);
-    delay(1000);
-    fullRotation();
-    delay(3000);
+   // delay(1000);
+    //fullRotation();
+    //delay(3000);
   }
 
 }
