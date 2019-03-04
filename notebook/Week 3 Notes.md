@@ -60,12 +60,18 @@ float volts = analogRead(sensor)*0.0048828125;  // value from sensor * (5/1024)
 
 ## Acknowledgements
 Coding for IR Sensor and RGB Sensor-Wes
+
 Wiring of Sensors-Ryan
+
 Mounting of Sensors onto the chassis- Wes and Ryan
 
+
 ## Our Goals for Next Week
-* Find a smaller battery that can power both the arduino and motor shield.
+*Find a smaller battery that can power both the arduino and motor shield.
+
 *Implement code for light sensor and Pixycam
+
 *Construct?reseach a mechanism for collecting balls
+
 *Implement a player role. Most likely the keeper role with some sort of patrol method along the yellow line in 
 the arena.
