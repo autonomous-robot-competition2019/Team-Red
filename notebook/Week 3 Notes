@@ -1,4 +1,4 @@
-# Notebook Entry (Week of 2/18)
+## Notebook Entry (Week of 2/18)
 
 This week we focused on the wiring and coding of the various required sensors as well as the basic movement of 
 the robot. The first sensor that we focused on implenting was the SHARP IR Sensor which we utilizes to detect objects
