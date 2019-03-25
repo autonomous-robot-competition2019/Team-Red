@@ -40,6 +40,13 @@ const int goal_r = 123;
 const int goal_g = 115;
 const int goal_b = 45;
 
+void updateMotor(int motor1, int motor0) {
+  motorRight = motor0;
+  motorLeft = motor1;
+  pwm.setPWM(0,0,motorRight);
+  pwm.setPWM(1,0,motorLeft);
+}
+
 void setup(void) {
   Serial.begin(9600);
 
@@ -54,6 +61,7 @@ void setup(void) {
 }
 
 void loop(void) {
+  updateMotor(333,333);
   colorUpdate();
 }
 

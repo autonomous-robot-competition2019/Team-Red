@@ -13,7 +13,7 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS347
 #define sensor A0
 
 // Speed
-const int drive_speed = 300;
+const int drive_speed = 100;
 
 // Time
 const long runtime = 60;
@@ -95,7 +95,7 @@ void loop() {
   }
 }
 
-void updateMotor(int motor0, int motor1) {
+void updateMotor(int motor1, int motor0) {
   motorRight = motor0;
   motorLeft = motor1;
   pwm.setPWM(0,0,motorRight);
@@ -109,11 +109,11 @@ void rotation(int degree, int direction) {
   // Turn left
   if (direction == 0) {
     updateMotor(333 - drive_speed,333 - drive_speed);
-    delay(degree * 19);    
+    delay(degree * 13.25);    
   // Turn right
   } else {
     updateMotor(333 + drive_speed,333 + drive_speed);
-    delay(degree * 19);
+    delay(degree * 13.25);
   }
 }
 
