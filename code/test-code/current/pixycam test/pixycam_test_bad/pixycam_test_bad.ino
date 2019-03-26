@@ -73,9 +73,8 @@ int motorLeft = 333;
 
 // Tracking constants
 const int follow_step = 1;
-const int follow_range = 30;
+const int follow_range = 5;
 const int follow_center = 160;
-const int follow_rotation_const = 10;
 
 // Yellow variables
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
@@ -215,32 +214,32 @@ void updatePixy() {
   // grab blocks!
   blocks = pixy.getBlocks();
 
+  // Reset found signatures
+  foundYellow = 0;
+
   if (blocks) {
-    int smallestYindex = -1;
+    int closestYellow = 0;
+    int closestYellowDistance = pixy.blocks[0].width + pixy.blocks[0].height;
     for (j = 0; j < blocks; j++) {
+      int width = pixy.blocks[j].width;
+      int height = pixy.blocks[j].height;
       if (pixy.blocks[j].signature == 1) {
-        if (smallestYindex == -1) {
-          smallestYindex = j;
-        } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
-          smallestYindex = j;
+        foundYellow = 1;
+        if (closestYellowDistance < (width + height)) {
+          closestYellow = j;
+          closestYellowX = pixy.blocks[j].x;
+          closestYellowY = pixy.blocks[j].y;
         }
       }
+      pixy.blocks[j].print();
+      Serial.print("foundYellow = ");
+      Serial.print(foundYellow);
+      Serial.print(", closestYellowX = ");
+      Serial.print(closestYellowX);
+      Serial.print(", closestYellowY = ");
+      Serial.print(closestYellowY);
+      Serial.println();
     }
-    if (smallestYindex >= 0) {
-      foundYellow = 1;
-      closestYellowY = pixy.blocks[smallestYindex].y;
-      closestYellowX = pixy.blocks[smallestYindex].x;
-    } else {
-      foundYellow = 0;
-    }
-    pixy.blocks[j].print();
-    Serial.print("foundYellow = ");
-    Serial.print(foundYellow);
-    Serial.print(", closestYellowX = ");
-    Serial.print(closestYellowX);
-    Serial.print(", closestYellowY = ");
-    Serial.print(closestYellowY);
-    Serial.println();
   }
 }
 
@@ -263,28 +262,26 @@ void focusYellow() {
     // Spin until yellow is found
     if (foundYellow == 0) {
       if (isRotating == 0) { 
-        constantRotation(1);
+//        constantRotation(1);
       }
     }
     // If yellow is found
     else if (foundYellow == 1) {
       // If rotating, go straight
       if (isRotating == 1) {
-        constantRotation(0);
+//        constantRotation(0);
       }
       // Object is aligned. Drive straight
-      if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
+      if ((x_low <= closestYellowX) && (x_high >= closestYellowY)) {
         updateMotor(333 - drive_speed, 333 + drive_speed);
       }
       // Object is too far right. Turn left.
-      else if (closestYellowX >= (follow_center + follow_range)) {
-        rotation((closestYellowX - follow_center)/follow_rotation_const, 0);
-        updateMotor(333 - drive_speed, 333 + drive_speed);
+      else if (closestYellowX >= follow_center) {
+        updateMotor(motorLeft, motorRight - follow_step);
       }
       // Object is too far left. Turn right.
-      else if (closestYellowX <= (follow_center - follow_range)) {
-        rotation((follow_center - closestYellowX)/follow_rotation_const, 1);
-        updateMotor(333 - drive_speed, 333 + drive_speed);
+      else if (closestYellowX <= 160) {
+        updateMotor(motorLeft - follow_step, motorRight);
       }
     }
 }
