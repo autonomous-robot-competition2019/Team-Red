@@ -82,6 +82,10 @@ int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
 int closestYellowX = 0;
 int closestYellowY = 0;
 
+// Light Sensor
+int lightSensorPin = A15;    // select the input pin for the potentiometer
+const int light_sensitivity = 700;
+
 void setup() {
   Serial.begin(9600);
   pwm.begin();
@@ -89,6 +93,9 @@ void setup() {
 
   // Initialize pixycam
   pixy.init();
+
+  // Light sensor
+  analogReference(EXTERNAL); 
 
   // Check for rgb sensor
   if (tcs.begin()) {
@@ -124,7 +131,11 @@ void loop() {
     // Edge detection
     else if (colorRange == 3) {
       rotation(180, 0);
-    } else {
+    } 
+    else if (analogRead(lightSensorPin) >= light_sensitivity) {
+      stop_robot();
+    }
+    else {
       focusYellow();
     }
   }
