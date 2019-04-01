@@ -1,4 +1,4 @@
-#Week 5
+## Week 5
 We began this week by doing a complete overhaul of the design of our chassis in order to make it more stable and reliable. 
 By moving a few things around and adding a foamcore base at the top of the robot we were able to create more space and reduce wire clutter.
 In addition to this we now have two treads which utilize a gear system operated by our servo motors in order to function. These new
