@@ -84,4 +84,3 @@ a full range of motion.
 + 3D print a new chassis
 + Improve the color switching of the light sensor
 + Implement the keeper role
-+ 
