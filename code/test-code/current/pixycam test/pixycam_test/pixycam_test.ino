@@ -82,10 +82,6 @@ int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
 int closestYellowX = 0;
 int closestYellowY = 0;
 
-// Light Sensor
-int lightSensorPin = A15;    // select the input pin for the potentiometer
-const int light_sensitivity = 700;
-
 void setup() {
   Serial.begin(9600);
   pwm.begin();
@@ -124,17 +120,14 @@ void loop() {
      updatePixy();
     // Obstactle stop
     int distance = get_distance();
-    if (distance >= 0 && distance <= 7) {
-      // rotation(180, 0);
-      stop_robot();
-    }
+//    if (distance >= 0 && distance <= 7) {
+//      // rotation(180, 0);
+////      stop_robot();
+//    }
     // Edge detection
-    else if (colorRange == 3) {
+    if (colorRange == 3) {
       rotation(180, 0);
     } 
-    else if (analogRead(lightSensorPin) >= light_sensitivity) {
-      stop_robot();
-    }
     else {
       focusYellow();
     }

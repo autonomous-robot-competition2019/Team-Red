@@ -27,7 +27,7 @@ void setup() {
 }
 
 void loop() {
-  pwm.setPWM(0,0,100);
+//  pwm.setPWM(0,0,100);
   pwm.setPWM(1,0,433);
 //  pwm.setPWM(0,0,333);
 //  pwm.setPWM(1,0,333);
