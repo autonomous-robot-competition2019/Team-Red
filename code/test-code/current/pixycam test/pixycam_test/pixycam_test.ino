@@ -17,7 +17,7 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS347
 
 // Right motor is 0
 // Left motor is 1
-// Neutral PWM is 333
+// Neutral PWM is 333, 336
 
 #define sensor A0
 
@@ -120,9 +120,9 @@ void loop() {
      updatePixy();
     // Obstactle stop
     int distance = get_distance();
-//    if (distance >= 0 && distance <= 7) {
+//    if (distance >= 0 && distance <= 4) {
 //      // rotation(180, 0);
-////      stop_robot();
+//      stop_robot();
 //    }
     // Edge detection
     if (colorRange == 3) {
@@ -134,47 +134,49 @@ void loop() {
   }
 }
 
-void updateMotor(int motor0, int motor1) {
-  motorRight = motor1;
-  motorLeft = motor0;
-  pwm.setPWM(0,0,motorRight);
-  pwm.setPWM(1,0,motorLeft);
+// 0 = straight
+// 1 = reverse
+// 2 = right
+// 3 = left
+// 4 = stop
+void drive(int direction) {
+  if (direction == 0) {
+    pwm.setPWM(0,0, 333 + drive_speed);
+    pwm.setPWM(1,0,336 - (drive_speed + (drive_speed * .55)));   
+    isRotating = 0;  
+  }
+  else if (direction == 1) {
+    pwm.setPWM(0,0, 333 - drive_speed);
+    pwm.setPWM(1,0,336 + (drive_speed + (drive_speed * .55))); 
+    isRotating = 0;       
+  }
+  else if (direction == 2) {
+    pwm.setPWM(0,0, 333 + drive_speed);
+    pwm.setPWM(1,0,336 + (drive_speed + (drive_speed * .55)));   
+    isRotating = 1;   
+  }
+  else if (direction == 3) {
+    pwm.setPWM(0,0, 333 - drive_speed);
+    pwm.setPWM(1,0,336 - (drive_speed + (drive_speed * .55)));
+    isRotating = 1;          
+  }
+  else {
+    pwm.setPWM(0,0, 333);
+    pwm.setPWM(1,0,336);   
+    isRotating = 1;      
+  }
 }
-
-
-// 1300 = 90
 
 void rotation(int degree, int direction) {
   // Turn left
   if (direction == 0) {
-    updateMotor(333 - drive_speed,333 - drive_speed);
-    delay(degree * 13.25);    
+    drive(3);
+    delay(degree * 10);    
   // Turn right
   } else {
-    updateMotor(333 + drive_speed,333 + drive_speed);
-    delay(degree * 13.25);
+    drive(2);
+    delay(degree * 10);
   }
-}
-
-void constantRotation(int direction) {
-  // start rotating
-  if (isRotating == 0) {
-    isRotating = 1;
-    if (direction == 0) {
-      updateMotor(333 - drive_speed,333 - drive_speed);  
-    // Turn right
-    } else {
-      updateMotor(333 + drive_speed,333 + drive_speed);
-    }
-  } else {
-    isRotating = 0;
-    updateMotor(333 - drive_speed, 333 + drive_speed);
-  }
-}
-
-// Stop function
-void stop() {
-  updateMotor(333,333);
 }
 
 void colorUpdate() {
@@ -203,12 +205,7 @@ void colorUpdate() {
   } else {
     colorRange = 3;
   }
-//  } else if (r >= (yel_r - range) && r <= (yel_r + range) && b >= (yel_b - range) && b <= (yel_b + range) && g >= (yel_g - range) && g <= (yel_g + range)) {
-//    colorRange = 3;
-//  }
-  
-  Serial.print("Zone: "); Serial.print(colorRange); Serial.println();
-  
+  Serial.print("Zone: "); Serial.print(colorRange); Serial.println();  
 }
 
 void updatePixy() {
@@ -266,34 +263,32 @@ void focusYellow() {
     
     // Spin until yellow is found
     if (foundYellow == 0) {
-      if (isRotating == 0) { 
-        constantRotation(1);
-      }
+      drive(2);
     }
     // If yellow is found
     else if (foundYellow == 1) {
       // If rotating, go straight
       if (isRotating == 1) {
-        constantRotation(0);
+        drive(0);
       }
       // Object is aligned. Drive straight
       if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
-        updateMotor(333 - drive_speed, 333 + drive_speed);
+        drive(0);
       }
       // Object is too far right. Turn left.
       else if (closestYellowX >= (follow_center + follow_range)) {
         rotation((closestYellowX - follow_center)/follow_rotation_const, 0);
-        updateMotor(333 - drive_speed, 333 + drive_speed);
+        drive(0);
       }
       // Object is too far left. Turn right.
       else if (closestYellowX <= (follow_center - follow_range)) {
         rotation((follow_center - closestYellowX)/follow_rotation_const, 1);
-        updateMotor(333 - drive_speed, 333 + drive_speed);
+        drive(0);
       }
     }
 }
 
 void stop_robot() {
-  updateMotor(333,333);
+  drive(4);
   stop_all = 1;
 }
