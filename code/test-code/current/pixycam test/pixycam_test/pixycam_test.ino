@@ -90,9 +90,6 @@ void setup() {
   // Initialize pixycam
   pixy.init();
 
-  // Light sensor
-  analogReference(EXTERNAL); 
-
   // Check for rgb sensor
   if (tcs.begin()) {
     Serial.println("Found sensor");
@@ -106,7 +103,7 @@ void setup() {
 
 void loop() {
   if (stop_all == 1) {
-    // do nothing 
+  
   }
   // Time stop code
   else if (millis() >= runtime * 1000) {
@@ -119,13 +116,12 @@ void loop() {
     // Check for blocks
      updatePixy();
     // Obstactle stop
-    int distance = get_distance();
-//    if (distance >= 0 && distance <= 4) {
-//      // rotation(180, 0);
-//      stop_robot();
-//    }
+    if (get_distance() > 0 && get_distance() <= 4) {
+      // rotation(180, 0);
+      stop_robot();
+    }
     // Edge detection
-    if (colorRange == 3) {
+    else if (colorRange == 3) {
       rotation(180, 0);
     } 
     else {
@@ -277,12 +273,12 @@ void focusYellow() {
       }
       // Object is too far right. Turn left.
       else if (closestYellowX >= (follow_center + follow_range)) {
-        rotation((closestYellowX - follow_center)/follow_rotation_const, 0);
+        rotation((closestYellowX - follow_center)/follow_rotation_const, 1);
         drive(0);
       }
       // Object is too far left. Turn right.
       else if (closestYellowX <= (follow_center - follow_range)) {
-        rotation((follow_center - closestYellowX)/follow_rotation_const, 1);
+        rotation((follow_center - closestYellowX)/follow_rotation_const, 0);
         drive(0);
       }
     }
