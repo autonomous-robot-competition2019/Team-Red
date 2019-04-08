@@ -4,7 +4,7 @@
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 #define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
-#define ARMSERVOMAX  370 // this is the 'maximum' pulse length count (out of 4096)
+#define ARMSERVOMAX  390 // this is the 'maximum' pulse length count (out of 4096)
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define CLAWSERVOMAX  300 // this is the 'maximum' pulse length count (out of 4096)

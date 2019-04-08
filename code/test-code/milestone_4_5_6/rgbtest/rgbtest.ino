@@ -82,4 +82,5 @@ void colorUpdate() {
   
   Serial.print("Zone: "); Serial.print(colorRange); Serial.println();
   tcs.setInterrupt(true);  // turn off LED
+  delay(60);
 }
