@@ -11,7 +11,7 @@ We began by simplifying the prioritization of the color search function  to bett
 it looks for a green quaffle and then transfers to a score state once the quaffle is picked up off the ground by the claw. 
 Next we integrated our pre-existing code for the operation of the arm and the claw into the color search code to allow the arm to function in tandem with all the other sensors.
 Since the quaffle is so small we had some difficulty positioning the robot in the ideal location to be able to pick up the ball after tracking was complete. The robot would often lose track of 
-the ball just as it got into a position where the claw would be able to grab the ball. In order to adress this problem we implemented a very specific maneveur after the robot had tracke
+the ball just as it got into a position where the claw would be able to grab the ball. In order to adress this problem we implemented a very specific maneveur after the robot had tracked
 the ball to the pixy cam's ideal distance to get the claw in position. After this maneuveur was completed the robot would always reach the position required to complete
 the retrieval of the quaffle. A similar function called score was implemented in addition to fetch ball to allow the robot to score on the goal after it completed its tracking of the yellow color.
 This code was ultimately successful and the robot was able to consistently pick up the quaffle and then score. Unfortunately during our testing we ran into a new problem when we attempted to place 
