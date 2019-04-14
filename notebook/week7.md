@@ -7,7 +7,7 @@ than it had ever been before. This new design was also now able to accomodate a 
 the robot. 
 
 With our new completed chassis in place we got to work on refining our color search code in order to implement the chaser role into our robot.
-We began by simplifying the prioritazation of the color search function  to better fit with the chaser role. The robot now begins in a search state where
+We began by simplifying the prioritization of the color search function  to better fit with the chaser role. The robot now begins in a search state where
 it looks for a green quaffle and then transfers to a score state once the quaffle is picked up off the ground by the claw. 
 Next we integrated our pre-existing code for the operation of the arm and the claw into the color search code to allow the arm to function in tandem with all the other sensors.
 Since the quaffle is so small we had some difficulty positioning the robot in the ideal location to be able to pick up the ball after tracking was complete. The robot would often lose track of 
