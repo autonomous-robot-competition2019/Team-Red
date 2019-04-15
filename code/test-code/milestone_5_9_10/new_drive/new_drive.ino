@@ -33,7 +33,7 @@ void loop() {
 void drive(int direction) {
   if (direction == 0) {
     pwm.setPWM(0,0, 333 + drive_speed);
-    pwm.setPWM(1,0,336 - drive_speed);   
+    pwm.setPWM(1,0,336 - (drive_speed + (drive_speed * .2)));   
   }
   else if (direction == 1) {
     pwm.setPWM(0,0, 333 - drive_speed);

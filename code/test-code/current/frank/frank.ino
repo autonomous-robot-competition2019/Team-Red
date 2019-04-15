@@ -26,7 +26,7 @@ const int drive_speed = 5;
 int isRotating = 0; // 0 is not rotating, 1 is rotating
 
 // Time
-const long runtime = 60;
+const long runtime = 500;
 
 // Stop
 int stop_all = 0;
@@ -75,7 +75,7 @@ int motorLeft = 333;
 const int follow_step = 1;
 const int follow_range = 5;
 const int follow_center = 160;
-const int follow_rotation_const = 5;
+const int follow_rotation_const = 20;
 
 // Yellow variables
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
@@ -88,6 +88,8 @@ int yellowSizeX = 50;
 int yellowSizeY = 34;
 int yellowRangeX = 5;
 int yellowRangeY = 5;
+int yellowMinY = 20;
+int yellowMinX = 80;
 
 // Green variables
 int foundGreen = 0; // 0 = no green, 1 = yes green
@@ -95,11 +97,13 @@ int closestGreenX = 0;
 int closestGreenY = 0;
 int closestGreenSizeX = 0;
 int closestGreenSizeY = 0;
+int greenMinX = 5;
+int greenMinY = 5;
 
 int greenSizeX = 50;
 int greenSizeY = 34;
 int greenRangeX = 5;
-int greenRangeY = 5;
+int greenRangeY = 10;
 
 // Orange variables
 int foundOrange = 0; // 0 = no orange, 1 = yes orange
@@ -112,7 +116,7 @@ int state = 0; // 0 = searching, 1 = found, 2 = score
 // Arm variables
 
 #define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
-#define ARMSERVOMAX  390 // this is the 'maximum' pulse length count (out of 4096)
+#define ARMSERVOMAX  400 // this is the 'maximum' pulse length count (out of 4096)
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define CLAWSERVOMAX  300 // this is the 'maximum' pulse length count (out of 4096)
@@ -164,9 +168,7 @@ void loop() {
     }
     else {
       if (state == 0) {
-//        focusGreen();
-//        focusYellow();
-          focusOrange();
+        focusGreen();
       } 
       else if (state == 2) {
         focusYellow();
@@ -183,12 +185,12 @@ void loop() {
 void drive(int direction) {
   if (direction == 0) {
     pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 - drive_speed);
+    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
     isRotating = 0;
   }
   else if (direction == 1) {
     pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 + drive_speed);
+    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .2)));
     isRotating = 0;
   }
   else if (direction == 2) {
@@ -198,13 +200,21 @@ void drive(int direction) {
   }
   else if (direction == 3) {
     pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 - drive_speed);
+    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
     isRotating = 1;
   }
-  else {
+  else if (direction == 4) {
     pwm.setPWM(0, 0, 333);
     pwm.setPWM(1, 0, 336);
     isRotating = 1;
+  }
+  else {
+    int randRotate = random(1,2);
+    int randomDirection = random(0,1);
+    int randomDistance = random(0, 5);
+    rotation(randRotate * 90, randomDirection);
+    drive(0);
+    delay(randomDistance * 1000);
   }
 }
 
@@ -212,11 +222,11 @@ void rotation(int degree, int direction) {
   // Turn left
   if (direction == 0) {
     drive(3);
-    delay(degree * 15);
+    delay(degree * 25);
     // Turn right
   } else {
     drive(2);
-    delay(degree * 15);
+    delay(degree * 25);
   }
 }
 
@@ -264,7 +274,7 @@ void updatePixy() {
 
     for (j = 0; j < blocks; j++) {
       // Yellow tracking
-      if (pixy.blocks[j].signature == 1) {
+      if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
         if (smallestYindex == -1) {
           smallestYindex = j;
         } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
@@ -272,7 +282,7 @@ void updatePixy() {
         }
       }
       // Green tracking
-      else if (pixy.blocks[j].signature == 2) {
+      else if (pixy.blocks[j].signature == 2 && pixy.blocks[j].height >= greenMinY && pixy.blocks[j].width >= greenMinX) {
         if (smallestYGreenindex == -1) {
           smallestYGreenindex = j;
         } else if (pixy.blocks[j].y < pixy.blocks[smallestYGreenindex].y) {
@@ -342,7 +352,7 @@ void focusYellow() {
 
   // Spin until yellow is found
   if (foundYellow == 0) {
-    drive(2);
+    drive(5);
   }
   // If yellow is found
   else if (foundYellow == 1) {
@@ -502,9 +512,9 @@ void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  rotation(32, 0);
+  rotation(17, 0);
   drive(0);
-  delay(1200);
+  delay(2000);
   drive(4);
   close_claw();
   delay(200);
@@ -516,7 +526,7 @@ void score() {
   drive(4);
   delay(1000);
   drive(0);
-  delay(800);
+  delay(1000);
   drive(4);
   open_claw();
   delay(200);
