@@ -88,8 +88,8 @@ int yellowSizeX = 50;
 int yellowSizeY = 34;
 int yellowRangeX = 5;
 int yellowRangeY = 5;
-int yellowMinY = 0;
-int yellowMinX = 0;
+int yellowMinY = 80;
+int yellowMinX = 200;
 
 // Green variables
 int foundGreen = 0; // 0 = no green, 1 = yes green
@@ -97,13 +97,13 @@ int closestGreenX = 0;
 int closestGreenY = 0;
 int closestGreenSizeX = 0;
 int closestGreenSizeY = 0;
-int greenMinX = 0;
-int greenMinY = 0;
+int greenMinX = 2;
+int greenMinY = 2;
 
-int greenSizeX = 20;
-int greenSizeY = 10;
+int greenSizeX = 36;
+int greenSizeY = 29;
 int greenRangeX = 5;
-int greenRangeY = 5;
+int greenRangeY = 10;
 
 // Orange variables
 int foundOrange = 0; // 0 = no orange, 1 = yes orange
@@ -168,7 +168,7 @@ void loop() {
     }
     else {
       if (state == 0) {
-        drive(0);
+        focusGreen();
       } 
       else if (state == 2) {
         focusYellow();
@@ -352,7 +352,7 @@ void focusYellow() {
 
   // Spin until yellow is found
   if (foundYellow == 0) {
-    drive(2);
+    drive(5);
   }
   // If yellow is found
   else if (foundYellow == 1) {
@@ -498,9 +498,9 @@ void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  rotation(8, 0);
+  rotation(17, 0);
   drive(0);
-  delay(400);
+  delay(2700);
   drive(4);
   close_claw();
   delay(200);

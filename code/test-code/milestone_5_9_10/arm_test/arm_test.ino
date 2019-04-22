@@ -3,8 +3,8 @@
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
-#define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
-#define ARMSERVOMAX  390 // this is the 'maximum' pulse length count (out of 4096)
+#define ARMSERVOMIN  250 // this is the 'minimum' pulse length count (out of 4096)
+#define ARMSERVOMAX  450 // this is the 'maximum' pulse length count (out of 4096)
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define CLAWSERVOMAX  300 // this is the 'maximum' pulse length count (out of 4096)
@@ -23,18 +23,14 @@ void setup() {
 void loop() {
   lower_arm();
   delay(3000);
-  close_claw();
-  delay(1000);
   raise_arm();
-  delay(3000);
-  open_claw();
   delay(3000);
 }
 
 // Raise arm of the robot
 void raise_arm() {
   for (uint16_t pulselen = ARMSERVOMAX; pulselen > ARMSERVOMIN; pulselen--) {
-    pwm.setPWM(2, 0, pulselen);
+    pwm.setPWM(4, 0, pulselen);
     delay(5);
   }
 }
@@ -42,7 +38,7 @@ void raise_arm() {
 // Lower arm of the robot
 void lower_arm() {
   for (uint16_t pulselen = ARMSERVOMIN; pulselen < ARMSERVOMAX; pulselen++) {
-    pwm.setPWM(2, 0, pulselen);
+    pwm.setPWM(4, 0, pulselen);
     delay(5);
   }
 }
