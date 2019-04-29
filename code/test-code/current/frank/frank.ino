@@ -75,7 +75,7 @@ int motorLeft = 333;
 const int follow_step = 1;
 const int follow_range = 5;
 const int follow_center = 160;
-const int follow_rotation_const = 20;
+const int follow_rotation_const = 10;
 
 // Yellow variables
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
@@ -83,6 +83,7 @@ int closestYellowX = 0;
 int closestYellowY = 0;
 int closestYellowSizeX = 0;
 int closestYellowSizeY = 0;
+int fullSendYellow = 0;
 
 int yellowSizeX = 50;
 int yellowSizeY = 34;
@@ -100,8 +101,8 @@ int closestGreenSizeY = 0;
 int greenMinX = 0;
 int greenMinY = 0;
 
-int greenSizeX = 20;
-int greenSizeY = 10;
+int greenSizeX = 30;
+int greenSizeY = 25;
 int greenRangeX = 5;
 int greenRangeY = 5;
 
@@ -140,7 +141,6 @@ void setup() {
     while (1);
   }
   lower_arm();
-  lower_JOHNNY();
   open_claw();
   delay(10);
 }
@@ -172,7 +172,7 @@ void loop() {
     }
     else {
       if (state == 0) {
-        drive(0);
+        focusGreen();
       } 
       else if (state == 2) {
         focusYellow();
@@ -189,22 +189,22 @@ void loop() {
 void drive(int direction) {
   if (direction == 0) {
     pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .1)));
     isRotating = 0;
   }
   else if (direction == 1) {
     pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .2)));
+    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .1)));
     isRotating = 0;
   }
   else if (direction == 2) {
     pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 + drive_speed);
+    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .1)));
     isRotating = 1;
   }
   else if (direction == 3) {
     pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .1)));
     isRotating = 1;
   }
   else if (direction == 4) {
@@ -355,17 +355,9 @@ void focusYellow() {
   int x_high = follow_center + follow_range;
 
   // Spin until yellow is found
-  if (foundYellow == 0) {
-    drive(2);
-  }
-  // If yellow is found
-  else if (foundYellow == 1) {
-    // If rotating, go straight
-    if (isRotating == 1) {
-      drive(0);
-    }
+  if (fullSendYellow == 1) {
     int yellowDistance = get_distance();
-    if (yellowDistance > 0 && yellowDistance <= 4) {
+    if (yellowDistance >= 0 && yellowDistance <= 12) {
       if (closestYellowSizeX >= 320) {
         score();
       } else {
@@ -375,6 +367,19 @@ void focusYellow() {
         rotation(90, 0);
       }
     }
+    else {
+       drive(0); 
+    }
+  }
+  else if (foundYellow == 0) {
+    drive(2);
+  }
+  // If yellow is found
+  else if (foundYellow == 1) {
+    // If rotating, go straight
+    if (isRotating == 1) {
+      drive(0);
+    }
     // Object is aligned. Drive straight
     else if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
       drive(0);
@@ -383,11 +388,13 @@ void focusYellow() {
     else if (closestYellowX >= (follow_center + follow_range)) {
       rotation((closestYellowX - follow_center) / follow_rotation_const, 1);
       drive(0);
+      fullSendYellow = 1;
     }
     // Object is too far left. Turn right.
     else if (closestYellowX <= (follow_center - follow_range)) {
       rotation((follow_center - closestYellowX) / follow_rotation_const, 0);
       drive(0);
+      fullSendYellow = 1;
     }
   }
 }
@@ -497,37 +504,20 @@ void close_claw() {
     pwm.setPWM(3, 0, pulselen);
   }
 }
-// Raise arm of the robot
-void raise_JOHNNY() {
-  for (uint16_t pulselen = ARM2SERVOMAX; pulselen > ARM2SERVOMIN; pulselen--) {
-    pwm.setPWM(4, 0, pulselen);
-    delay(5);
-  }
-}
-
-// Lower arm of the robot
-void lower_JOHNNY() {
-  for (uint16_t pulselen = ARM2SERVOMIN; pulselen < ARM2SERVOMAX; pulselen++) {
-    pwm.setPWM(4, 0, pulselen);
-    delay(5);
-  }
-}
 
 void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  raise_JOHNNY();
   delay(200);
-  rotation(8, 0);
+  rotation(9, 0);
   drive(0);
-  delay(400);
+  delay(2300);
   drive(4);
   close_claw();
   delay(200);
   raise_arm();
   delay(200);
-  lower_JOHNNY();
   state = 2;
  
 }
@@ -535,13 +525,11 @@ void fetch_ball() {
 void score() {
   drive(4);
   delay(1000);
-  raise_JOHNNY();
   delay(200);
   drive(0);
   delay(1200);
   drive(4);
   open_claw();
   delay(200);
-  lower_JOHNNY();
   stop_robot();
 }
