@@ -117,6 +117,9 @@ int state = 0; // 0 = searching, 1 = found, 2 = score
 
 #define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
 #define ARMSERVOMAX  400 // this is the 'maximum' pulse length count (out of 4096)
+#define ARM2SERVOMIN  250 // this is the 'minimum' pulse length count (out of 4096)
+#define ARM2SERVOMAX  450 // this is the 'maximum' pulse length count (out of 4096)
+
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define CLAWSERVOMAX  300 // this is the 'maximum' pulse length count (out of 4096)
@@ -491,6 +494,21 @@ void open_claw() {
 void close_claw() {
   for (uint16_t pulselen = CLAWSERVOMIN; pulselen < CLAWSERVOMAX; pulselen++) {
     pwm.setPWM(3, 0, pulselen);
+  }
+}
+// Raise arm of the robot
+void raise_JOHNNY() {
+  for (uint16_t pulselen = ARM2SERVOMAX; pulselen > ARM2SERVOMIN; pulselen--) {
+    pwm.setPWM(4, 0, pulselen);
+    delay(5);
+  }
+}
+
+// Lower arm of the robot
+void lower_JOHNNY() {
+  for (uint16_t pulselen = ARM2SERVOMIN; pulselen < ARM2SERVOMAX; pulselen++) {
+    pwm.setPWM(4, 0, pulselen);
+    delay(5);
   }
 }
 
