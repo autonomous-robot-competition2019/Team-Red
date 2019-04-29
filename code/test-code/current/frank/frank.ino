@@ -118,7 +118,7 @@ int state = 0; // 0 = searching, 1 = found, 2 = score
 #define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
 #define ARMSERVOMAX  400 // this is the 'maximum' pulse length count (out of 4096)
 #define ARM2SERVOMIN  250 // this is the 'minimum' pulse length count (out of 4096)
-#define ARM2SERVOMAX  450 // this is the 'maximum' pulse length count (out of 4096)
+#define ARM2SERVOMAX  475 // this is the 'maximum' pulse length count (out of 4096)
 
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
@@ -140,6 +140,7 @@ void setup() {
     while (1);
   }
   lower_arm();
+  lower_JOHNNY();
   open_claw();
   delay(10);
 }
@@ -516,6 +517,8 @@ void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
+  raise_JOHNNY();
+  delay(200);
   rotation(8, 0);
   drive(0);
   delay(400);
@@ -523,16 +526,22 @@ void fetch_ball() {
   close_claw();
   delay(200);
   raise_arm();
+  delay(200);
+  lower_JOHNNY();
   state = 2;
+ 
 }
 
 void score() {
   drive(4);
   delay(1000);
+  raise_JOHNNY();
+  delay(200);
   drive(0);
   delay(1200);
   drive(4);
   open_claw();
   delay(200);
+  lower_JOHNNY();
   stop_robot();
 }
