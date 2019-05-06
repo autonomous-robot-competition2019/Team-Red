@@ -23,15 +23,10 @@ Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS347
 
 // Speed
 const int drive_speed = 5;
-int isRotating = 0; // 0 is not rotating, 1 is rotating
+int isSearching = 0; // 0 is not rotating, 1 is rotating
 
 // Time
 const long runtime = 500;
-
-int lightPin = A8;    // select the input pin for the potentiometer
-
-float rawRange = 1024; // 3.3v
-float logRange = 5.0; // 3.3v = 10^5 lux
 
 // Stop
 int stop_all = 0;
@@ -77,8 +72,7 @@ int motorLeft = 333;
 // green = 4
 
 // Tracking constants
-const int follow_step = 1;
-const int follow_range = 5;
+const int follow_range = 10;
 const int follow_center = 160;
 const int follow_rotation_const = 10;
 
@@ -86,16 +80,6 @@ const int follow_rotation_const = 10;
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
 int closestYellowX = 0;
 int closestYellowY = 0;
-int closestYellowSizeX = 0;
-int closestYellowSizeY = 0;
-int fullSendYellow = 0;
-
-int yellowSizeX = 50;
-int yellowSizeY = 34;
-int yellowRangeX = 5;
-int yellowRangeY = 5;
-int yellowMinY = 0;
-int yellowMinX = 0;
 
 // Green variables
 int foundGreen = 0; // 0 = no green, 1 = yes green
@@ -103,13 +87,11 @@ int closestGreenX = 0;
 int closestGreenY = 0;
 int closestGreenSizeX = 0;
 int closestGreenSizeY = 0;
-int greenMinX = 0;
-int greenMinY = 0;
 
 int greenSizeX = 30;
 int greenSizeY = 25;
 int greenRangeX = 5;
-int greenRangeY = 5;
+int greenRangeY = 10;
 
 // State
 int state = 0; // 0 = searching, 1 = found, 2 = score
@@ -117,10 +99,7 @@ int state = 0; // 0 = searching, 1 = found, 2 = score
 // Arm variables
 
 #define ARMSERVOMIN  240 // this is the 'minimum' pulse length count (out of 4096)
-#define ARMSERVOMAX  400 // this is the 'maximum' pulse length count (out of 4096)
-#define ARM2SERVOMIN  250 // this is the 'minimum' pulse length count (out of 4096)
-#define ARM2SERVOMAX  475 // this is the 'maximum' pulse length count (out of 4096)
-
+#define ARMSERVOMAX  390 // this is the 'maximum' pulse length count (out of 4096)
 
 #define CLAWSERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define CLAWSERVOMAX  300 // this is the 'maximum' pulse length count (out of 4096)
@@ -161,13 +140,16 @@ void loop() {
     updatePixy();
     // Edge detection
     if (colorRange == 3) {
+      Serial.println("Uh oh, yellow :(");
       rotation(180, 0);
     }
-    if (state == 0) {
-      focusGreen();
-    }
-    else if (state == 2) {
-      focusYellow();
+    else {
+      if (state == 0) {
+        focusGreen();
+      }
+      else if (state == 2) {
+        focusYellow();
+      }
     }
   }
 }
@@ -180,40 +162,48 @@ void loop() {
 void drive(int direction) {
   if (direction == 0) {
     pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 - drive_speed);
-    isRotating = 0;
+    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .55)));
+    isSearching = 0;
   }
   else if (direction == 1) {
     pwm.setPWM(0, 0, 333 - drive_speed);
     pwm.setPWM(1, 0, 336 + drive_speed);
-    isRotating = 0;
+    isSearching = 0;
   }
   else if (direction == 2) {
-    pwm.setPWM(0, 0, 333 + 2);
-    pwm.setPWM(1, 0, 336 + 2);
-    isRotating = 1;
+    pwm.setPWM(0, 0, 333 + drive_speed);
+    pwm.setPWM(1, 0, 336 + drive_speed);
   }
   else if (direction == 3) {
-    pwm.setPWM(0, 0, 333 - 2);
-    pwm.setPWM(1, 0, 336 - 2);
-    isRotating = 1;
+    pwm.setPWM(0, 0, 333 - drive_speed);
+    pwm.setPWM(1, 0, 336 - drive_speed);
   }
   else {
     pwm.setPWM(0, 0, 333);
     pwm.setPWM(1, 0, 336);
-    isRotating = 0;
+    isSearching = 0;
   }
+}
+
+void search() {
+  isSearching = 1;
+  int randomNum = rand() % (100 + 1 - 0) + 0;
+  if (randomNum == 1) {
+    drive(0);
+    delay(2000);
+  }
+  drive(2);
 }
 
 void rotation(int degree, int direction) {
   // Turn left
   if (direction == 0) {
     drive(3);
-    delay(degree * 25);
+    delay(degree * 10);
     // Turn right
   } else {
     drive(2);
-    delay(degree * 25);
+    delay(degree * 10);
   }
 }
 
@@ -261,7 +251,7 @@ void updatePixy() {
 
     for (j = 0; j < blocks; j++) {
       // Yellow tracking
-      if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
+      if (pixy.blocks[j].signature == 1) {
         if (smallestYindex == -1) {
           smallestYindex = j;
         } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
@@ -269,7 +259,7 @@ void updatePixy() {
         }
       }
       // Green tracking
-      else if (pixy.blocks[j].signature == 2 && pixy.blocks[j].height >= greenMinY && pixy.blocks[j].width >= greenMinX) {
+      else if (pixy.blocks[j].signature == 2) {
         if (smallestYGreenindex == -1) {
           smallestYGreenindex = j;
         } else if (pixy.blocks[j].y < pixy.blocks[smallestYGreenindex].y) {
@@ -283,12 +273,10 @@ void updatePixy() {
       foundYellow = 1;
       closestYellowY = pixy.blocks[smallestYindex].y;
       closestYellowX = pixy.blocks[smallestYindex].x;
-      closestYellowSizeX = pixy.blocks[smallestYindex].width;
-      closestYellowSizeY = pixy.blocks[smallestYindex].height;
     } else {
       foundYellow = 0;
     }
-    
+
     // Update green global variables
     if (smallestYGreenindex >= 0) {
       foundGreen = 1;
@@ -304,38 +292,22 @@ void updatePixy() {
   }
 }
 
-int get_distance() {
-  // Read values from IR sensor
-  float volts = analogRead(sensor) * 0.0048828125; // value from sensor * (5/1024)
-  int distance = 13 * pow(volts, -1); // worked out from datasheet graph
-  if (distance <= 80 && distance != 0) {
-    Serial.print("Distance: "); Serial.print(distance); Serial.println();
-    return distance;
-  } else {
-    return -1;
-  }
-}
-
 void focusYellow() {
   int x_low = follow_center - follow_range;
   int x_high = follow_center + follow_range;
 
   // Spin until yellow is found
   if (foundYellow == 0) {
-    drive(5);
+    drive(2);
   }
   // If yellow is found
   else if (foundYellow == 1) {
     // If rotating, go straight
-    if (isRotating == 1) {
+    if (isSearching == 1) {
       drive(0);
     }
-    int rawValue = analogRead(lightPin);
-    if (RawToLux(rawValue) > 3000) {
-      score();
-    }
     // Object is aligned. Drive straight
-    else if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
+    if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
       drive(0);
     }
     // Object is too far right. Turn left.
@@ -357,30 +329,30 @@ void focusGreen() {
 
   // Spin until green is found
   if (foundGreen == 0) {
-    Serial.println("SPIN");
-    drive(2);
+    search();
   }
   // If green is found
   else if (foundGreen == 1) {
-    Serial.println("GREEN");
+    // If rotating, go straight
+    if (isSearching == 1) {
+      drive(0);
+      delay(100);
+    }
     if ((closestGreenSizeX <= (greenRangeX + greenSizeX)) && (closestGreenSizeX >= (greenSizeX - greenRangeX)) && (closestGreenSizeY <= (greenRangeY + greenSizeY)) && (closestGreenSizeY >= (greenSizeY - greenRangeY))) {
       fetch_ball();
     }
     // Object is aligned. Drive straight
     else if ((x_low <= closestGreenX) && (x_high >= closestGreenX)) {
-      Serial.println("STRAIGHT");
       drive(0);
     }
     // Object is too far right. Turn left.
     else if (closestGreenX >= (follow_center + follow_range)) {
-      Serial.println("LEFT");
-      rotation(5, 1);
+      rotation((closestGreenX - follow_center) / follow_rotation_const, 1);
       drive(0);
     }
     // Object is too far left. Turn right.
     else if (closestGreenX <= (follow_center - follow_range)) {
-      Serial.println("RIGHT");
-      rotation(5, 0);
+      rotation((follow_center - closestGreenX) / follow_rotation_const, 0);
       drive(0);
     }
   }
@@ -418,22 +390,18 @@ void open_claw() {
 void close_claw() {
   for (uint16_t pulselen = CLAWSERVOMIN; pulselen < CLAWSERVOMAX; pulselen++) {
     pwm.setPWM(3, 0, pulselen);
+    delay(10);
   }
-}
-
-float RawToLux(int raw)
-{
-  float logLux = raw * logRange / rawRange;
-  return pow(10, logLux);
 }
 
 void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  rotation(12, 0);
-  drive(0);
-  delay(2500);
+  rotation(25, 0);
+  pwm.setPWM(0, 0, 333 + 4);
+  pwm.setPWM(1, 0, 336 - 4);
+  delay(3150);
   drive(4);
   close_claw();
   delay(200);
