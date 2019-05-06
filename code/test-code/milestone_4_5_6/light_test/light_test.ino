@@ -8,7 +8,7 @@
   Connect 3.3v to the AREF pin 
  */
 
-int sensorPin = A15;    // select the input pin for the potentiometer
+int lightPin = A8;    // select the input pin for the potentiometer
 
 float rawRange = 1024; // 3.3v
 float logRange = 5.0; // 3.3v = 10^5 lux

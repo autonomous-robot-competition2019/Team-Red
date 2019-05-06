@@ -28,6 +28,11 @@ int isRotating = 0; // 0 is not rotating, 1 is rotating
 // Time
 const long runtime = 500;
 
+int lightPin = A8;    // select the input pin for the potentiometer
+
+float rawRange = 1024; // 3.3v
+float logRange = 5.0; // 3.3v = 10^5 lux
+
 // Stop
 int stop_all = 0;
 
@@ -189,28 +194,28 @@ void loop() {
 void drive(int direction) {
   if (direction == 0) {
     pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .1)));
+    pwm.setPWM(1, 0, 336 - drive_speed);
     isRotating = 0;
   }
   else if (direction == 1) {
     pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .1)));
+    pwm.setPWM(1, 0, 336 + drive_speed);
     isRotating = 0;
   }
   else if (direction == 2) {
-    pwm.setPWM(0, 0, 333 + drive_speed);
-    pwm.setPWM(1, 0, 336 + (drive_speed + (drive_speed * .1)));
+    pwm.setPWM(0, 0, 333 + 2);
+    pwm.setPWM(1, 0, 336 + 2);
     isRotating = 1;
   }
   else if (direction == 3) {
-    pwm.setPWM(0, 0, 333 - drive_speed);
-    pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .1)));
+    pwm.setPWM(0, 0, 333 - 2);
+    pwm.setPWM(1, 0, 336 - 2);
     isRotating = 1;
   }
   else if (direction == 4) {
     pwm.setPWM(0, 0, 333);
     pwm.setPWM(1, 0, 336);
-    isRotating = 1;
+    isRotating = 0;
   }
   else {
     int randRotate = random(1,2);
@@ -355,30 +360,18 @@ void focusYellow() {
   int x_high = follow_center + follow_range;
 
   // Spin until yellow is found
-  if (fullSendYellow == 1) {
-    int yellowDistance = get_distance();
-    if (yellowDistance >= 0 && yellowDistance <= 12) {
-      if (closestYellowSizeX >= 320) {
-        score();
-      } else {
-        rotation(90, 1);
-        drive(0);
-        delay(1500);
-        rotation(90, 0);
-      }
-    }
-    else {
-       drive(0); 
-    }
-  }
-  else if (foundYellow == 0) {
-    drive(2);
+  if (foundYellow == 0) {
+    drive(5);
   }
   // If yellow is found
   else if (foundYellow == 1) {
     // If rotating, go straight
     if (isRotating == 1) {
       drive(0);
+    }
+    int rawValue = analogRead(lightPin);   
+    if (RawToLux(rawValue) > 3000) {
+        score();
     }
     // Object is aligned. Drive straight
     else if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
@@ -388,13 +381,11 @@ void focusYellow() {
     else if (closestYellowX >= (follow_center + follow_range)) {
       rotation((closestYellowX - follow_center) / follow_rotation_const, 1);
       drive(0);
-      fullSendYellow = 1;
     }
     // Object is too far left. Turn right.
     else if (closestYellowX <= (follow_center - follow_range)) {
       rotation((follow_center - closestYellowX) / follow_rotation_const, 0);
       drive(0);
-      fullSendYellow = 1;
     }
   }
 }
@@ -446,10 +437,6 @@ void focusGreen() {
   }
   // If green is found
   else if (foundGreen == 1) {
-    // If rotating, go straight
-    if (isRotating == 1) {
-      drive(0);
-    }
     if ((closestGreenSizeX <= (greenRangeX + greenSizeX)) && (closestGreenSizeX >= (greenSizeX - greenRangeX)) && (closestGreenSizeY <= (greenRangeY + greenSizeY)) && (closestGreenSizeY >= (greenSizeY - greenRangeY))) {
       fetch_ball();
     }
@@ -464,7 +451,7 @@ void focusGreen() {
     }
     // Object is too far left. Turn right.
     else if (closestGreenX <= (follow_center - follow_range)) {
-      rotation((follow_center - closestGreenX) / follow_rotation_const, 0);
+      rotation((closestGreenX - follow_center) / follow_rotation_const, 0);
       drive(0);
     }
   }
@@ -505,14 +492,19 @@ void close_claw() {
   }
 }
 
+float RawToLux(int raw)
+{
+  float logLux = raw * logRange / rawRange;
+  return pow(10, logLux);
+}
+
 void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  delay(200);
-  rotation(9, 0);
+  rotation(12, 0);
   drive(0);
-  delay(2300);
+  delay(2500);
   drive(4);
   close_claw();
   delay(200);
