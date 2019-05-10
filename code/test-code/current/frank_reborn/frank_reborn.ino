@@ -68,11 +68,6 @@ int motorLeft = 333;
 
 // PixyCam
 
-static int i = 0;
-uint16_t blocks;
-char buf[32];
-int j;
-
 // yellow = 1
 // blue = 2
 // red = 3
@@ -268,12 +263,65 @@ void colorUpdate() {
 }
 
 void updatePixy() {
+  static int i = 0;
+  uint16_t blocks;
+  char buf[32];
+  int j;
+
   // grab blocks!
   blocks = pixy.getBlocks();
 
   if (blocks) {
-    if (i%50==0){
-      i++;
+    int smallestYindex = -1;
+    int smallestYOrangeindex = -1;
+    int smallestYGreenindex = -1;
+
+    for (j = 0; j < blocks; j++) {
+      // Yellow tracking
+      if (pixy.blocks[j].signature == 1) {
+        if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
+          if (smallestYindex == -1) {
+            smallestYindex = j;
+          } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
+            smallestYindex = j;
+          }
+        }
+      }
+      // Green tracking
+      else if (pixy.blocks[j].signature == 2) {
+        if (smallestYGreenindex == -1) {
+          smallestYGreenindex = j;
+        } else if (pixy.blocks[j].y < pixy.blocks[smallestYGreenindex].y) {
+          smallestYGreenindex = j;
+        }
+      }
+    }
+
+    // Update yellow global variables
+    if (smallestYindex >= 0) {
+      foundYellow = 1;
+      closestYellowY = pixy.blocks[smallestYindex].y;
+      closestYellowX = pixy.blocks[smallestYindex].x;
+    } else {
+      foundYellow = 0;
+    }
+
+    // Update green global variables
+    if (smallestYGreenindex >= 0) {
+      foundGreen = 1;
+      closestGreenY = pixy.blocks[smallestYGreenindex].y;
+      closestGreenX = pixy.blocks[smallestYGreenindex].x;
+      closestGreenSizeX = pixy.blocks[smallestYGreenindex].width;
+      closestGreenSizeY = pixy.blocks[smallestYGreenindex].height;
+      pixy.blocks[smallestYGreenindex].print();
+      delay(10);
+    } else {
+      foundGreen = 0;
+    }
+  } else {
+    delay(20);
+    blocks = pixy.getBlocks();
+    if (blocks) {
       int smallestYindex = -1;
       int smallestYOrangeindex = -1;
       int smallestYGreenindex = -1;
