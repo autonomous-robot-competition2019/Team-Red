@@ -31,11 +31,13 @@ const long runtime = 500;
 // Stop
 int stop_all = 0;
 
-// Zone
-int zone = 0; // 0 = red zone, 1 = blue zone
+// Zone (Start in red)
+int enemyZone = 1;
+int zone = 2; // 1 = red zone, 2 = blue zone
 
 // Color Range (0 = gray, 1 = red, 2 = blue, 3 = yellow, 4 = goal)
 int colorRange = 0;
+int prevColorRange = 0;
 
 // Color Constants
 const int range = 20;
@@ -66,6 +68,11 @@ int motorLeft = 333;
 
 // PixyCam
 
+static int i = 0;
+uint16_t blocks;
+char buf[32];
+int j;
+
 // yellow = 1
 // blue = 2
 // red = 3
@@ -80,6 +87,8 @@ const int follow_rotation_const = 10;
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
 int closestYellowX = 0;
 int closestYellowY = 0;
+int yellowMinX = 20;
+int yellowMinY = 15;
 
 // Green variables
 int foundGreen = 0; // 0 = no green, 1 = yes green
@@ -91,7 +100,7 @@ int closestGreenSizeY = 0;
 int greenSizeX = 30;
 int greenSizeY = 25;
 int greenRangeX = 5;
-int greenRangeY = 10;
+int greenRangeY = 5;
 
 // State
 int state = 0; // 0 = searching, 1 = found, 2 = score
@@ -108,6 +117,8 @@ void setup() {
   Serial.begin(9600);
   pwm.begin();
   pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+
+  pinMode(41, INPUT_PULLUP);
 
   // Initialize pixycam
   pixy.init();
@@ -148,7 +159,19 @@ void loop() {
         focusGreen();
       }
       else if (state == 2) {
-        focusYellow();
+        if (digitalRead(41) != HIGH) {
+          if (zone != enemyZone) {
+            drive(1);
+            delay(3000);
+            rotation(180, 1);
+            drive(0);
+            delay(15000);
+          } else {
+            score();           
+          }
+        } else {
+          focusYellow();
+        }
       }
     }
   }
@@ -221,73 +244,82 @@ void colorUpdate() {
   Serial.println();
 
   if (r >= (gry_r - range) && r <= (gry_r + range) && b >= (gry_b - range) && b <= (gry_b + range) && g >= (gry_g - range) && g <= (gry_g + range)) {
+    prevColorRange = colorRange;
     colorRange = 0;
   } else if (r >= (red_r - range) && r <= (red_r + range) && b >= (red_b - range) && b <= (red_b + range) && g >= (red_g - range) && g <= (red_g + range)) {
+    prevColorRange = colorRange;
     colorRange = 1;
     // Update zone
-    zone = 0;
+    if (prevColorRange == 0) {
+      zone = 1;
+    }
   } else if (r >= (blu_r - range) && r <= (blu_r + range) && b >= (blu_b - range) && b <= (blu_b + range) && g >= (blu_g - range) && g <= (blu_g + range)) {
+    prevColorRange = colorRange;
     colorRange = 2;
     // Update zone
-    zone = 1;
+    if (prevColorRange == 0) {
+      zone = 2;
+    }
   } else if (r >= (yel_r - range) && r <= (yel_r + range) && b >= (yel_b - range) && b <= (yel_b + range) && g >= (yel_g - range) && g <= (yel_g + range)) {
     colorRange = 3;
   }
-  Serial.print("Zone: "); Serial.print(colorRange); Serial.println();
+  Serial.print("Current: "); Serial.print(colorRange); Serial.println();
+  Serial.print("Zone: "); Serial.print(zone); Serial.println();
 }
 
 void updatePixy() {
-  uint16_t blocks;
-  char buf[32];
-  int j;
-
   // grab blocks!
   blocks = pixy.getBlocks();
 
   if (blocks) {
-    int smallestYindex = -1;
-    int smallestYOrangeindex = -1;
-    int smallestYGreenindex = -1;
-
-    for (j = 0; j < blocks; j++) {
-      // Yellow tracking
-      if (pixy.blocks[j].signature == 1) {
-        if (smallestYindex == -1) {
-          smallestYindex = j;
-        } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
-          smallestYindex = j;
+    if (i%50==0){
+      i++;
+      int smallestYindex = -1;
+      int smallestYOrangeindex = -1;
+      int smallestYGreenindex = -1;
+  
+      for (j = 0; j < blocks; j++) {
+        // Yellow tracking
+        if (pixy.blocks[j].signature == 1) {
+          if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
+            if (smallestYindex == -1) {
+              smallestYindex = j;
+            } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
+              smallestYindex = j;
+            }
+          }
+        }
+        // Green tracking
+        else if (pixy.blocks[j].signature == 2) {
+          if (smallestYGreenindex == -1) {
+            smallestYGreenindex = j;
+          } else if (pixy.blocks[j].y < pixy.blocks[smallestYGreenindex].y) {
+            smallestYGreenindex = j;
+          }
         }
       }
-      // Green tracking
-      else if (pixy.blocks[j].signature == 2) {
-        if (smallestYGreenindex == -1) {
-          smallestYGreenindex = j;
-        } else if (pixy.blocks[j].y < pixy.blocks[smallestYGreenindex].y) {
-          smallestYGreenindex = j;
-        }
+  
+      // Update yellow global variables
+      if (smallestYindex >= 0) {
+        foundYellow = 1;
+        closestYellowY = pixy.blocks[smallestYindex].y;
+        closestYellowX = pixy.blocks[smallestYindex].x;
+      } else {
+        foundYellow = 0;
       }
-    }
-
-    // Update yellow global variables
-    if (smallestYindex >= 0) {
-      foundYellow = 1;
-      closestYellowY = pixy.blocks[smallestYindex].y;
-      closestYellowX = pixy.blocks[smallestYindex].x;
-    } else {
-      foundYellow = 0;
-    }
-
-    // Update green global variables
-    if (smallestYGreenindex >= 0) {
-      foundGreen = 1;
-      closestGreenY = pixy.blocks[smallestYGreenindex].y;
-      closestGreenX = pixy.blocks[smallestYGreenindex].x;
-      closestGreenSizeX = pixy.blocks[smallestYGreenindex].width;
-      closestGreenSizeY = pixy.blocks[smallestYGreenindex].height;
-      pixy.blocks[smallestYGreenindex].print();
-      delay(10);
-    } else {
-      foundGreen = 0;
+  
+      // Update green global variables
+      if (smallestYGreenindex >= 0) {
+        foundGreen = 1;
+        closestGreenY = pixy.blocks[smallestYGreenindex].y;
+        closestGreenX = pixy.blocks[smallestYGreenindex].x;
+        closestGreenSizeX = pixy.blocks[smallestYGreenindex].width;
+        closestGreenSizeY = pixy.blocks[smallestYGreenindex].height;
+        pixy.blocks[smallestYGreenindex].print();
+        delay(10);
+      } else {
+        foundGreen = 0;
+      }
     }
   }
 }
@@ -413,12 +445,10 @@ void fetch_ball() {
 
 void score() {
   drive(4);
-  delay(1000);
-  delay(200);
-  drive(0);
-  delay(1200);
-  drive(4);
   open_claw();
-  delay(200);
-  stop_robot();
+  drive(1);
+  delay(3000);
+  rotation(180, 1);
+  lower_arm();
+  state = 0;
 }
