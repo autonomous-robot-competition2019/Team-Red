@@ -79,11 +79,13 @@ const int follow_center = 160;
 const int follow_rotation_const = 10;
 
 // Yellow variables
+const int follow_yellow_range = 10;
 int foundYellow = 0; // 0 = no yellow, 1 = yes yellow
 int closestYellowX = 0;
 int closestYellowY = 0;
-int yellowMinX = 20;
-int yellowMinY = 15;
+int closestYellowWidth = 0;
+int yellowMinX = 7;
+int yellowMinY = 7;
 
 // Green variables
 int foundGreen = 0; // 0 = no green, 1 = yes green
@@ -147,7 +149,9 @@ void loop() {
     // Edge detection
     if (colorRange == 3) {
       Serial.println("Uh oh, yellow :(");
-      rotation(180, 0);
+      rotation(650, 0);
+    } else if (digitalRead(41) != HIGH && state != 2) {
+      rotation(650, 0);
     }
     else {
       if (state == 0) {
@@ -158,9 +162,9 @@ void loop() {
           if (zone != enemyZone) {
             drive(1);
             delay(3000);
-            rotation(180, 1);
+            rotation(650, 1);
             drive(0);
-            delay(15000);
+            delay(2000);
           } else {
             score();           
           }
@@ -179,6 +183,7 @@ void loop() {
 // 4 = stop
 void drive(int direction) {
   if (direction == 0) {
+    colorUpdate();
     pwm.setPWM(0, 0, 333 + drive_speed);
     pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .55)));
     isSearching = 0;
@@ -282,7 +287,7 @@ void updatePixy() {
         if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
           if (smallestYindex == -1) {
             smallestYindex = j;
-          } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
+          } else if (pixy.blocks[j].width > pixy.blocks[smallestYindex].width) {
             smallestYindex = j;
           }
         }
@@ -302,6 +307,7 @@ void updatePixy() {
       foundYellow = 1;
       closestYellowY = pixy.blocks[smallestYindex].y;
       closestYellowX = pixy.blocks[smallestYindex].x;
+      closestYellowWidth = pixy.blocks[smallestYindex].width;
     } else {
       foundYellow = 0;
     }
@@ -332,7 +338,7 @@ void updatePixy() {
           if (pixy.blocks[j].signature == 1 && pixy.blocks[j].height >= yellowMinY && pixy.blocks[j].width >= yellowMinX) {
             if (smallestYindex == -1) {
               smallestYindex = j;
-            } else if (pixy.blocks[j].y < pixy.blocks[smallestYindex].y) {
+            } else if (pixy.blocks[j].width > pixy.blocks[smallestYindex].width) {
               smallestYindex = j;
             }
           }
@@ -352,6 +358,7 @@ void updatePixy() {
         foundYellow = 1;
         closestYellowY = pixy.blocks[smallestYindex].y;
         closestYellowX = pixy.blocks[smallestYindex].x;
+        closestYellowWidth = pixy.blocks[smallestYindex].width;
       } else {
         foundYellow = 0;
       }
@@ -373,8 +380,8 @@ void updatePixy() {
 }
 
 void focusYellow() {
-  int x_low = follow_center - follow_range;
-  int x_high = follow_center + follow_range;
+  int x_low = follow_center - follow_yellow_range;
+  int x_high = follow_center + follow_yellow_range;
 
   // Spin until yellow is found
   if (foundYellow == 0) {
@@ -386,8 +393,12 @@ void focusYellow() {
     if (isSearching == 1) {
       drive(0);
     }
+    if (closestYellowWidth >= 300) {
+      pwm.setPWM(0, 0, 333 + drive_speed);
+      pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+    }
     // Object is aligned. Drive straight
-    if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
+    else if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
       drive(0);
     }
     // Object is too far right. Turn left.
@@ -488,7 +499,6 @@ void fetch_ball() {
   raise_arm();
   delay(200);
   state = 2;
-
 }
 
 void score() {
