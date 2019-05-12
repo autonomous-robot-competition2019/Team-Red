@@ -149,7 +149,9 @@ void loop() {
     // Edge detection
     if (colorRange == 3) {
       Serial.println("Uh oh, yellow :(");
-      rotation(650, 0);
+      drive(1);
+      delay(2000);
+      rotation(300, 0);
     } else if (digitalRead(41) != HIGH && state != 2) {
       rotation(650, 0);
     }
@@ -163,8 +165,9 @@ void loop() {
             drive(1);
             delay(3000);
             rotation(650, 1);
-            drive(0);
-            delay(2000);
+            pwm.setPWM(0, 0, 333 + drive_speed);
+            pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+            delay(10000);
           } else {
             score();           
           }
@@ -210,12 +213,13 @@ void drive(int direction) {
 
 void search() {
   isSearching = 1;
-  int randomNum = rand() % (100 + 1 - 0) + 0;
+  int randomNum = rand() % (150 + 1 - 0) + 0;
   if (randomNum == 1) {
     drive(0);
     delay(2000);
   }
-  drive(2);
+  pwm.setPWM(0, 0, 333 + 4);
+  pwm.setPWM(1, 0, 336 + 4);
 }
 
 void rotation(int degree, int direction) {
