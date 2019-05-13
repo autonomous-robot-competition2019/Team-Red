@@ -33,7 +33,7 @@ int stop_all = 0;
 
 // Zone (Start in red)
 int enemyZone = 1;
-int zone = 2; // 1 = red zone, 2 = blue zone
+int zone = 1; // 1 = red zone, 2 = blue zone
 
 // Color Range (0 = gray, 1 = red, 2 = blue, 3 = yellow, 4 = goal)
 int colorRange = 0;
@@ -130,6 +130,10 @@ void setup() {
   lower_arm();
   open_claw();
   delay(10);
+  rotation(80, 0);
+  pwm.setPWM(0,0, 342);
+  pwm.setPWM(1,0,320);   
+  delay(10000);
 }
 
 void loop() {
@@ -150,8 +154,7 @@ void loop() {
     if (colorRange == 3) {
       Serial.println("Uh oh, yellow :(");
       drive(1);
-      delay(2000);
-      rotation(300, 0);
+      delay(3000);
     } else if (digitalRead(41) != HIGH && state != 2) {
       rotation(650, 0);
     }
@@ -164,9 +167,9 @@ void loop() {
           if (zone != enemyZone) {
             drive(1);
             delay(3000);
-            rotation(650, 1);
-            pwm.setPWM(0, 0, 333 + drive_speed);
-            pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+            rotation(50, 1);
+            pwm.setPWM(0,0, 342);
+            pwm.setPWM(1,0,320);   
             delay(10000);
           } else {
             score();           
@@ -397,9 +400,9 @@ void focusYellow() {
     if (isSearching == 1) {
       drive(0);
     }
-    if (closestYellowWidth >= 300) {
-      pwm.setPWM(0, 0, 333 + drive_speed);
-      pwm.setPWM(1, 0, 336 - (drive_speed + (drive_speed * .2)));
+    if (closestYellowWidth >= 200) {
+      pwm.setPWM(0,0, 342);
+      pwm.setPWM(1,0,320);   
     }
     // Object is aligned. Drive straight
     else if ((x_low <= closestYellowX) && (x_high >= closestYellowX)) {
@@ -493,7 +496,7 @@ void fetch_ball() {
   state = 1;
   drive(4);
   delay(1000);
-  rotation(25, 0);
+  rotation(27, 0);
   pwm.setPWM(0, 0, 333 + 4);
   pwm.setPWM(1, 0, 336 - 4);
   delay(3150);
